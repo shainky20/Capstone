@@ -10,7 +10,7 @@ export default function Settings() {
 
           {[
             { label: "Theme",             value: "White & Blue (Light Mode)" },
-            { label: "AI Model",          value: "Gemini 1.5 Flash" },
+            { label: "AI Models",         value: "Gemini + Random Forest" },
             { label: "Risk Threshold",    value: "High > 70 | Medium > 40" },
             { label: "Notification Mode", value: "Real-time Alerts" },
             { label: "API Region",        value: "asia-south1 (Mumbai)" },
@@ -31,8 +31,8 @@ export default function Settings() {
         <div style={{ ...card, background: "linear-gradient(135deg,#eff6ff,#dbeafe)", border: "1px solid #bfdbfe" }}>
           <h3 style={{ marginTop: 0, color: "#1e40af" }}>ℹ️ System Info</h3>
           <p style={{ color: "#1e40af", fontSize: "14px", margin: 0 }}>
-            Running in <strong>Demo Mode</strong> — preset values are used to simulate live AI responses.
-            Connect the backend server on <code>localhost:5000</code> to enable live ML predictions and Gemini chat.
+            Risk predictions use the trained Random Forest model. Set <code>VITE_API_URL</code> to your deployed backend;
+            configure Gemini and Maps credentials in their respective server and frontend environments.
           </p>
         </div>
       </div>

@@ -21,6 +21,7 @@ build/
 
 # Google Cloud credentials
 backend/gmp-demo-project-879286123-9a50f736cd08.json
+**/*service-account*.json
 
 # Environment secrets
 .env

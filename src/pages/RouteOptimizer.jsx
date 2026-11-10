@@ -1,10 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Layout from "../components/Layout";
 
 export default function RouteOptimizer() {
   const mapRef = useRef(null);
+  const [mapError, setMapError] = useState("");
 
   useEffect(() => {
+    let intervalId;
+    let script;
+
     const initMap = () => {
       if (!window.google || !mapRef.current) return;
 
@@ -102,7 +106,7 @@ export default function RouteOptimizer() {
         },
       });
 
-      setInterval(() => {
+      intervalId = window.setInterval(() => {
         i = (i + 1) % shipmentPath.length;
         shipment.setPosition(shipmentPath[i]);
       }, 1400);
@@ -111,18 +115,32 @@ export default function RouteOptimizer() {
     if (window.google) {
       initMap();
     } else {
-      const script = document.createElement("script");
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        setMapError("Set VITE_GOOGLE_MAPS_API_KEY to enable the map.");
+        return undefined;
+      }
+
+      script = document.createElement("script");
 
       script.src =
         "https://maps.googleapis.com/maps/api/js?key=" +
-        import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        encodeURIComponent(apiKey);
 
       script.async = true;
       script.defer = true;
       script.onload = initMap;
+      script.onerror = () => {
+        setMapError("Google Maps could not be loaded. Check the browser key and its restrictions.");
+      };
 
       document.body.appendChild(script);
     }
+
+    return () => {
+      if (intervalId) window.clearInterval(intervalId);
+      if (script) script.remove();
+    };
   }, []);
 
   const card = {
@@ -157,6 +175,11 @@ export default function RouteOptimizer() {
               overflow: "hidden",
             }}
           />
+          {mapError && (
+            <p role="alert" style={{ color: "#b91c1c", marginBottom: 0 }}>
+              {mapError}
+            </p>
+          )}
         </div>
 
         {/* SIDE PANEL */}

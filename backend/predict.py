@@ -1,21 +1,57 @@
+import json
+from pathlib import Path
+import sys
+
 import joblib
 import pandas as pd
-import sys
-import json
 
-# Load model
-model = joblib.load("risk_model.pkl")
+FEATURES = [
+    "origin",
+    "destination",
+    "rain_mm",
+    "wind_speed",
+    "traffic_index",
+    "distance_km",
+    "priority",
+    "historical_delay",
+]
+MODEL_PATH = Path(__file__).resolve().parent.parent / "risk_model.pkl"
 
-# Receive JSON input from Node
-raw = sys.argv[1]
 
-data = json.loads(raw)
+def main():
+    raw = sys.stdin.read()
+    if not raw and len(sys.argv) > 1:
+        raw = sys.argv[1]
+    if not raw:
+        raise ValueError("Prediction input is required.")
 
-# Convert to DataFrame
-df = pd.DataFrame([data])
+    data = json.loads(raw)
+    if not isinstance(data, dict):
+        raise ValueError("Prediction input must be a JSON object.")
 
-# Predict
-pred = model.predict(df)[0]
+    missing = [feature for feature in FEATURES if feature not in data]
+    if missing:
+        raise ValueError(f"Missing prediction features: {', '.join(missing)}")
 
-# Output result
-print(round(pred, 2))
+    row = {feature: data[feature] for feature in FEATURES}
+    for feature in ["rain_mm", "wind_speed", "traffic_index", "distance_km", "historical_delay"]:
+        try:
+            row[feature] = float(row[feature])
+        except (TypeError, ValueError) as error:
+            raise ValueError(f"{feature} must be numeric.") from error
+
+    if any(value < 0 for key, value in row.items() if key in FEATURES[2:]):
+        raise ValueError("Numeric prediction features must be non-negative.")
+    if any(not isinstance(row[key], str) or not row[key].strip() for key in ["origin", "destination", "priority"]):
+        raise ValueError("origin, destination, and priority must be non-empty strings.")
+
+    model = joblib.load(MODEL_PATH)
+    prediction = float(model.predict(pd.DataFrame([row], columns=FEATURES))[0])
+    if not pd.notna(prediction):
+        raise ValueError("The model returned an invalid prediction.")
+
+    print(json.dumps({"risk_score": round(prediction, 2)}))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,6 +1,6 @@
 import pandas as pd
-import os
 import joblib
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
@@ -10,14 +10,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import mean_absolute_error, r2_score
 
 # Load CSV
-base_dir = os.path.dirname(__file__)
-
-csv_path = os.path.join(
-    base_dir,
-    "..",
-    "data",
-    "shipment_risk_dataset.csv"
-)
+base_dir = Path(__file__).resolve().parent
+csv_path = base_dir.parent / "data" / "shipment_risk_dataset.csv"
 
 df = pd.read_csv(csv_path)
 
@@ -109,6 +103,7 @@ print("MAE:", round(mae, 2))
 print("R2 Score:", round(r2, 2))
 
 # Save
-joblib.dump(model, "risk_model.pkl")
+model_path = Path(__file__).resolve().parent.parent / "risk_model.pkl"
+joblib.dump(model, model_path)
 
-print("Saved risk_model.pkl")
+print(f"Saved {model_path}")

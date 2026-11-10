@@ -1,21 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-// Uses Gemini REST API directly from the browser — no backend needed
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-const SYSTEM_CONTEXT = `You are an expert AI Supply Chain Assistant for SupplyChain Copilot.
-Answer clearly and professionally. Keep replies concise (2-4 sentences unless more detail is needed).
-
-Current Business Context:
-- 247 active shipments across India
-- 12 high-risk shipments (Mumbai→Delhi corridor most affected)
-- Mumbai corridor congestion HIGH due to heavy rain on NH48
-- On-time rate: 98.2%
-- AI has prevented ₹1.27L in losses this month via rerouting
-- Critical alerts: S-847 (High risk, 5.1hr delay), S-1012 (High risk, 7.8hr delay)`;
+import api from "../api";
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
@@ -45,46 +31,22 @@ export default function Layout({ children }) {
     setLoading(true);
 
     try {
-      const body = {
-        contents: [
-          {
-            parts: [
-              {
-                text: `${SYSTEM_CONTEXT}\n\nUser question: ${userText}`,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 512,
-        },
-      };
-
-      const res = await fetch(GEMINI_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+      const { data } = await api.post("/chat", {
+        message: userText,
       });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+      if (typeof data.reply !== "string" || !data.reply.trim()) {
+        throw new Error("The chat service returned an empty response.");
       }
 
-      const data = await res.json();
-      const reply =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "No response received from Gemini.";
-
-      setMessages((prev) => [...prev, { role: "ai", text: reply }]);
+      setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
     } catch (err) {
-      console.error("Gemini error:", err);
+      console.error("Chat request failed:", err);
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: `⚠️ Error: ${err.message}. Please try again.`,
+          text: `⚠️ ${err.response?.data?.error || err.message || "Chat service unavailable."} Please try again.`,
         },
       ]);
     } finally {
@@ -174,7 +136,7 @@ export default function Layout({ children }) {
                   Gemini Copilot
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "12px" }}>
-                  Powered by Gemini 1.5 Flash
+                  Powered by Gemini
                 </div>
               </div>
             </div>

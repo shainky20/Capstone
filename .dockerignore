@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+node_modules
+**/node_modules
+.venv
+venv
+__pycache__
+**/__pycache__
+dist
+build
+backend/gmp-demo-project-879286123-9a50f736cd08.json
+**/*service-account*.json
