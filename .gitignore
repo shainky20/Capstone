@@ -1,0 +1,28 @@
+
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+
+# IDE
+.vscode/
+
+# Build files
+dist/
+build/
+
+# Google Cloud credentials
+backend/gmp-demo-project-879286123-9a50f736cd08.json
+
+# Environment secrets
+.env
+.env.*
+!.env.example
